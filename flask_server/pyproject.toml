@@ -1,0 +1,21 @@
+[project]
+name = "flask-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "voyegerz", email = "nirajkumaruiflow@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.1.2",
+    "flask-sqlalchemy>=3.1.1",
+    "gunicorn>=25.0.0",
+]
+
+[project.scripts]
+flask-server = "flask_server:main"
+
+[build-system]
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
