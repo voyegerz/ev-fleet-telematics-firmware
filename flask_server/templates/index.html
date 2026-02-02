@@ -3,135 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EV Fleet Tracker</title>
+    <title>TERM_FLEET // V1.0</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Leaflet CSS (Map) -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        body { background-color: #f8f9fa; }
-        #map { height: 400px; width: 100%; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .status-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .indicator { width: 15px; height: 15px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .on { background-color: #28a745; box-shadow: 0 0 10px #28a745; }
-        .off { background-color: #dc3545; }
-        .waiting { animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        :root {
+            /* Nord Theme Palette */
+            --nord0: #1a1f29;
+            --nord1: #2E3440;
+            --nord3: #4C566A;
+            --nord4: #D8DEE9;
+            --nord8: #88C0D0; /* Primary Cyan */
+            --nord11: #BF616A; /* Red */
+            --nord14: #A3BE8C; /* Green */
+        }
+
+        body {
+            margin: 0;
+            padding: 15px;
+            background: radial-gradient(circle at center, #242933 0%, #1a1f29 100%);
+            color: var(--nord4);
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            grid-template-rows: 50px 1fr 200px;
+            gap: 15px;
+            height: calc(100vh - 30px);
+            width: 100%;
+        }
+
+        /* HEADER */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--nord3);
+            background: rgba(46, 52, 64, 0.5);
+            padding: 0 15px;
+            transition: border 0.2s;
+        }
+        .header:hover { border: 2px solid var(--nord8); }
+
+        .title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: var(--nord8);
+        }
+
+        /* GLASSY PANELS */
+        .panel {
+            background: rgba(46, 52, 64, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--nord3);
+            border-radius: 0; 
+            padding: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        
+        /* HOVER HIGHLIGHT */
+        .panel:hover {
+            border: 2px solid var(--nord8);
+            box-shadow: 0 0 15px rgba(136, 192, 208, 0.2);
+            z-index: 10;
+        }
+
+        .panel-header {
+            font-size: 0.75rem;
+            color: var(--nord8);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--nord3);
+            padding-bottom: 5px;
+        }
+
+        /* MAP PANEL */
+        .map-panel {
+            grid-column: 1 / 2;
+            grid-row: 2 / 4;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* PIN ICON */
+        .pin-marker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .pin-inner {
+            width: 14px;
+            height: 14px;
+            background: var(--nord8);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 0 10px var(--nord8);
+            border: 1px solid white;
+        }
+
+        /* STATS PANEL */
+        .stats-panel {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: var(--nord8);
+            font-weight: bold;
+        }
+
+        /* CONTROL PANEL */
+        .control-panel {
+            grid-column: 2 / 3;
+            grid-row: 3 / 4;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: transparent;
+            border: 2px solid var(--nord3);
+            color: var(--nord4);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            text-transform: uppercase;
+            border-radius: 0; /* Forced Square */
+        }
+
+        button:hover {
+            border-color: var(--nord8);
+            background: rgba(136, 192, 208, 0.05);
+        }
+
+        button.active-on {
+            background: rgba(163, 190, 140, 0.15);
+            border-color: var(--nord14);
+            color: var(--nord14);
+            box-shadow: 0 0 10px rgba(163, 190, 140, 0.2);
+        }
+
+        button.active-off {
+            background: rgba(191, 97, 106, 0.15);
+            border-color: var(--nord11);
+            color: var(--nord11);
+            box-shadow: 0 0 10px rgba(191, 97, 106, 0.2);
+        }
+
+        .status-text {
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes blinker { 50% { opacity: 0.3; } }
+        .blink { animation: blinker 1s linear infinite; }
+
+        /* Responsive */
+        @media (max-width: 850px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 50px 300px 180px 180px;
+                height: auto;
+                overflow-y: auto;
+            }
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-dark">
-    <div class="container">
-        <span class="navbar-brand mb-0 h1">🚀 EV Fleet Telematics</span>
-        <span class="text-white" id="last-seen">Offline</span>
+<div class="grid-container">
+    <div class="header">
+        <div class="title">TERM_FLEET_v1.0</div>
+        <div id="last-seen" style="font-size: 0.7rem;">OFFLINE</div>
     </div>
-</nav>
 
-<div class="container mt-4">
-    <div class="row">
-        <!-- MAP COLUMN -->
-        <div class="col-md-8">
-            <div id="map"></div>
+    <div class="panel map-panel">
+        <div id="map"></div>
+    </div>
+
+    <div class="panel stats-panel">
+        <div class="panel-header">Telemetry</div>
+        <div class="stat-row"><span>SPD_KPH</span><span class="stat-value" id="speed">00.0</span></div>
+        <div class="stat-row"><span>GPS_LAT</span><span class="stat-value" id="lat">00.0000</span></div>
+        <div class="stat-row"><span>GPS_LNG</span><span class="stat-value" id="lng">00.0000</span></div>
+        <div style="margin-top:auto; font-size: 0.7rem; color: var(--nord3)">> SYS_READY</div>
+    </div>
+
+    <div class="panel control-panel">
+        <div class="panel-header">Actuators</div>
+        <div class="btn-group">
+            <button id="btn-on" onclick="sendCommand('ON')">RELAY_ON</button>
+            <button id="btn-off" onclick="sendCommand('OFF')">RELAY_OFF</button>
         </div>
-
-        <!-- CONTROLS COLUMN -->
-        <div class="col-md-4">
-            <div class="status-card text-center">
-                <h4>Device Control</h4>
-                <hr>
-                <div class="mb-3">
-                    <span id="relay-indicator" class="indicator off"></span>
-                    <strong id="relay-text">RELAY IS OFF</strong>
-                </div>
-                
-                <div class="d-grid gap-2">
-                    <button class="btn btn-success btn-lg" onclick="sendCommand('ON')">TURN ON</button>
-                    <button class="btn btn-danger btn-lg" onclick="sendCommand('OFF')">TURN OFF</button>
-                </div>
-                <p class="text-muted mt-2 small">Command is queued until next device ping.</p>
-            </div>
-
-            <div class="status-card">
-                <h5>Telemetry</h5>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Speed: <strong id="speed">0</strong> km/h</li>
-                    <li class="list-group-item">Lat: <span id="lat">0.0</span></li>
-                    <li class="list-group-item">Lng: <span id="lng">0.0</span></li>
-                </ul>
-            </div>
-        </div>
+        <div class="status-text" id="relay-status">STATUS: UNKNOWN</div>
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // 1. Initialize Map
-    var map = L.map('map').setView([20.5937, 78.9629], 5); // Default India view
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    var marker = L.marker([20.5937, 78.9629]).addTo(map);
+    // Custom Pin Marker
+    var icon = L.divIcon({
+        className: 'pin-marker',
+        html: "<div class='pin-inner'></div>",
+        iconSize: [20, 20],
+        iconAnchor: [10, 20]
+    });
 
-    // 2. Poll Data Function
+    var marker = L.marker([20.5937, 78.9629], {icon: icon}).addTo(map);
+
     function updateDashboard() {
         fetch('/api/status')
             .then(response => response.json())
             .then(data => {
-                // Update Text
-                document.getElementById('last-seen').innerText = "Last Seen: " + data.last_seen;
+                document.getElementById('last-seen').innerText = "UPTIME: " + data.last_seen;
                 document.getElementById('speed').innerText = data.speed.toFixed(1);
                 document.getElementById('lat').innerText = data.lat.toFixed(6);
                 document.getElementById('lng').innerText = data.lng.toFixed(6);
 
-                // Update Map
                 if (data.lat !== 0 && data.lng !== 0) {
                     var newLatLng = new L.LatLng(data.lat, data.lng);
                     marker.setLatLng(newLatLng);
                     map.panTo(newLatLng); 
                 }
 
-                // Update Relay Status UI
-                var indicator = document.getElementById('relay-indicator');
-                var text = document.getElementById('relay-text');
-                
-                // If target state matches actual state, we are synced
-                if (data.relay_state === data.target_relay_state) {
-                    if (data.relay_state) {
-                        indicator.className = "indicator on";
-                        text.innerText = "RELAY IS ON";
-                    } else {
-                        indicator.className = "indicator off";
-                        text.innerText = "RELAY IS OFF";
-                    }
+                var btnOn = document.getElementById('btn-on');
+                var btnOff = document.getElementById('btn-off');
+                var statusText = document.getElementById('relay-status');
+
+                btnOn.className = data.target_relay_state ? "active-on" : "";
+                btnOff.className = !data.target_relay_state ? "active-off" : "";
+
+                if (data.relay_state !== data.target_relay_state) {
+                    statusText.innerText = "CMD_PENDING...";
+                    statusText.className = "status-text blink";
                 } else {
-                    // Waiting for update
-                    indicator.className = "indicator waiting " + (data.target_relay_state ? "on" : "off");
-                    text.innerText = "SENDING COMMAND...";
+                    statusText.innerText = data.relay_state ? "STATUS: ENGAGED" : "STATUS: DISENGAGED";
+                    statusText.className = "status-text";
                 }
             });
     }
 
-    // 3. Send Command Function
     function sendCommand(action) {
         fetch('/api/control', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: action })
-        }).then(() => {
-            // Force an immediate UI refresh to show "Sending..." state
-            updateDashboard();
-        });
+        }).then(() => updateDashboard());
     }
 
-    // Auto-Update every 2 seconds
     setInterval(updateDashboard, 2000);
-    updateDashboard(); // Initial call
+    updateDashboard();
 </script>
 
 </body>
