@@ -192,13 +192,54 @@
         @keyframes blinker { 50% { opacity: 0.3; } }
         .blink { animation: blinker 1s linear infinite; }
 
-        /* Responsive */
+        /* Responsive Mobile Layout */
         @media (max-width: 850px) {
+            body {
+                padding: 10px;
+                height: auto; /* Allow scrolling on mobile */
+                overflow-y: auto;
+            }
+
             .grid-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: 50px 300px 180px 180px;
+                /* Header, Map, Stats, Controls */
+                grid-template-rows: 50px 350px auto auto; 
                 height: auto;
-                overflow-y: auto;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+            /* Adjust panels for mobile */
+            .map-panel {
+                grid-column: 1;
+                grid-row: 2;
+                height: 350px; /* Fixed height for map */
+            }
+
+            .stats-panel {
+                grid-column: 1;
+                grid-row: 3;
+            }
+
+            .control-panel {
+                grid-column: 1;
+                grid-row: 4;
+            }
+
+            /* Larger Touch Targets */
+            button {
+                padding: 18px; /* Bigger tap area */
+                font-size: 1.1rem;
+                font-weight: bold;
+            }
+
+            .stat-row {
+                font-size: 1rem; /* Readable text */
+                padding: 5px 0;
+            }
+
+            .title {
+                font-size: 1rem; /* Compact title */
             }
         }
     </style>
