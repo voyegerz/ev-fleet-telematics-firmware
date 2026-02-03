@@ -89,7 +89,7 @@ def update_telemetry():
     return jsonify(response_payload)
 
 # ==========================================
-# 🖥️ WEB DASHBOARD ENDPOINTS
+# 🖥️ WEB DASHBOARD ENDPOINTS 
 # ==========================================
 @app.route('/')
 def index():
