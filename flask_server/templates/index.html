@@ -26,17 +26,17 @@
             background: radial-gradient(circle at center, #242933 0%, #1a1f29 100%);
             color: var(--nord4);
             font-family: 'Courier New', Courier, monospace;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: auto;
             box-sizing: border-box;
         }
 
         .grid-container {
             display: grid;
             grid-template-columns: 1fr 320px;
-            grid-template-rows: 50px 1fr 200px;
+            grid-template-rows: 50px 1fr auto;
             gap: 15px;
-            height: calc(100vh - 30px);
+            min-height: calc(100vh - 30px);
             width: 100%;
         }
 
