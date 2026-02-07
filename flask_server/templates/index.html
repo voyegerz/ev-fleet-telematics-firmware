@@ -270,6 +270,14 @@
             <button id="btn-on" onclick="sendCommand('ON')">RELAY_ON</button>
             <button id="btn-off" onclick="sendCommand('OFF')">RELAY_OFF</button>
         </div>
+        
+        <div class="panel-header" style="margin-top: 15px;">QR Tools</div>
+        <div class="btn-group">
+            <button onclick="window.location.href='/lock'">SHOW LOCK QR</button>
+            <button onclick="window.location.href='/unlock'">SHOW UNLOCK QR</button>
+            <button onclick="window.location.href='/scan'" style="border-color: var(--nord8); color: var(--nord8)">OPEN SCANNER</button>
+        </div>
+
         <div class="status-text" id="relay-status">STATUS: UNKNOWN</div>
     </div>
 </div>

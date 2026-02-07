@@ -95,6 +95,18 @@ def update_telemetry():
 def index():
     return render_template('index.html')
 
+@app.route('/lock')
+def lock_page():
+    return render_template('lock.html')
+
+@app.route('/unlock')
+def unlock_page():
+    return render_template('unlock.html')
+
+@app.route('/scan')
+def scan_page():
+    return render_template('scan.html')
+
 @app.route('/api/status', methods=['GET'])
 def get_status():
     """Frontend polls this to update map and buttons"""

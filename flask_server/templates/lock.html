@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERM_FLEET // LOCK</title>
+    
+    <style>
+        :root {
+            --nord0: #1a1f29;
+            --nord3: #4C566A;
+            --nord4: #D8DEE9;
+            --nord8: #88C0D0;
+            --nord11: #BF616A;
+            --nord14: #A3BE8C;
+        }
+
+        body {
+            margin: 0;
+            padding: 15px;
+            background: radial-gradient(circle at center, #242933 0%, #1a1f29 100%);
+            color: var(--nord4);
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            border: 1px solid var(--nord3);
+            background: rgba(46, 52, 64, 0.5);
+            padding: 10px 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--nord14); /* Green for Lock/On? Or Red? Usually Lock is secure. */
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .panel {
+            background: rgba(46, 52, 64, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--nord3);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        #qrcode {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 5px solid var(--nord4);
+        }
+
+        .status-box {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--nord3);
+        }
+
+        .status-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            color: var(--nord8);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--nord8);
+        }
+
+        /* Status Colors */
+        .status-on { color: var(--nord14); }
+        .status-off { color: var(--nord11); }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">RELAY ENGAGE (LOCK)</div>
+
+    <div class="panel">
+        <div style="margin-bottom: 10px; font-size: 0.8rem;">SCAN TO TURN ON</div>
+        <div id="qrcode"></div>
+        <div class="status-box">
+            <span>CURRENT STATUS</span>
+            <span id="relay-status" class="status-value">LOADING...</span>
+        </div>
+    </div>
+
+    <a href="/" class="back-link"><< RETURN TO DASHBOARD</a>
+</div>
+
+<!-- QR Code Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+    // Generate QR Code
+    new QRCode(document.getElementById("qrcode"), {
+        text: "RELAY_ON",
+        width: 200,
+        height: 200,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+
+    // Poll Status
+    function updateStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                const statusEl = document.getElementById('relay-status');
+                if (data.relay_state) {
+                    statusEl.innerText = "ENGAGED (ON)";
+                    statusEl.className = "status-value status-on";
+                } else {
+                    statusEl.innerText = "DISENGAGED (OFF)";
+                    statusEl.className = "status-value status-off";
+                }
+            });
+    }
+
+    setInterval(updateStatus, 2000);
+    updateStatus();
+</script>
+
+</body>
+</html>

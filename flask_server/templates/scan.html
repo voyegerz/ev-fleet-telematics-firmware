@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERM_FLEET // SCANNER</title>
+    
+    <style>
+        :root {
+            --nord0: #1a1f29;
+            --nord3: #4C566A;
+            --nord4: #D8DEE9;
+            --nord8: #88C0D0;
+            --nord11: #BF616A;
+            --nord14: #A3BE8C;
+        }
+
+        body {
+            margin: 0;
+            padding: 15px;
+            background: radial-gradient(circle at center, #242933 0%, #1a1f29 100%);
+            color: var(--nord4);
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            border: 1px solid var(--nord3);
+            background: rgba(46, 52, 64, 0.5);
+            padding: 10px 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--nord8);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .panel {
+            background: rgba(46, 52, 64, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--nord3);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* Customizing the scanner UI */
+        #reader {
+            width: 100%;
+            border: none !important;
+        }
+        
+        #reader__scan_region {
+            background: rgba(0,0,0,0.5);
+        }
+
+        .result-box {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--nord3);
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result-text {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .text-success { color: var(--nord14); }
+        .text-error { color: var(--nord11); }
+        .text-info { color: var(--nord8); }
+
+        .back-link {
+            margin-top: 20px;
+            color: var(--nord8);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--nord8);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">SYSTEM SCANNER</div>
+
+    <div class="panel">
+        <div id="reader"></div>
+        <div class="result-box">
+            <span id="scan-result" class="result-text text-info">READY TO SCAN...</span>
+            <span id="relay-status" style="font-size: 0.8rem; margin-top: 5px; color: var(--nord4)">STATUS: LOADING...</span>
+        </div>
+    </div>
+
+    <a href="/" class="back-link"><< RETURN TO DASHBOARD</a>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    // Audio Context for Beep
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Handle the scanned code
+        console.log(`Code matched = ${decodedText}`, decodedResult);
+        
+        const resultEl = document.getElementById('scan-result');
+        
+        if (decodedText === "RELAY_ON") {
+            beep();
+            resultEl.innerText = "COMMAND DETECTED: LOCK (ON)";
+            resultEl.className = "result-text text-success";
+            sendCommand("ON");
+        } else if (decodedText === "RELAY_OFF") {
+            beep();
+            resultEl.innerText = "COMMAND DETECTED: UNLOCK (OFF)";
+            resultEl.className = "result-text text-success";
+            sendCommand("OFF");
+        } else {
+            resultEl.innerText = "UNKNOWN QR CODE: " + decodedText;
+            resultEl.className = "result-text text-error";
+        }
+    }
+
+    function onScanFailure(error) {
+        // handle scan failure, usually better to ignore and keep scanning.
+        // console.warn(`Code scan error = ${error}`);
+    }
+
+    // Initialize Scanner
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: {width: 250, height: 250} },
+        /* verbose= */ false);
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
+    // API Helpers
+    function sendCommand(action) {
+        fetch('/api/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: action })
+        }).then(() => {
+            setTimeout(() => {
+                 document.getElementById('scan-result').innerText = "COMMAND SENT. READY.";
+                 document.getElementById('scan-result').className = "result-text text-info";
+            }, 2000);
+        });
+    }
+
+    function updateStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                const statusEl = document.getElementById('relay-status');
+                statusEl.innerText = "RELAY: " + (data.relay_state ? "ENGAGED" : "DISENGAGED");
+            });
+    }
+
+    setInterval(updateStatus, 2000);
+    updateStatus();
+
+</script>
+
+</body>
+</html>
