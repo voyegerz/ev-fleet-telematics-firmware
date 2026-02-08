@@ -257,11 +257,14 @@
     </div>
 
     <div class="panel stats-panel">
-        <div class="panel-header">Telemetry</div>
+        <div class="panel-header" id="telemetry-header">Telemetry</div>
+        <div class="stat-row"><span>SYSTEM_STATUS</span><span class="stat-value" id="sys-status">CHECKING...</span></div>
+        <div class="stat-row"><span>LAST_PACKET</span><span class="stat-value" id="seconds-ago">0s AGO</span></div>
+        <div class="stat-row"><span>GPS_STATUS</span><span class="stat-value" id="gps-status">...</span></div>
         <div class="stat-row"><span>SPD_KPH</span><span class="stat-value" id="speed">00.0</span></div>
         <div class="stat-row"><span>GPS_LAT</span><span class="stat-value" id="lat">00.0000</span></div>
         <div class="stat-row"><span>GPS_LNG</span><span class="stat-value" id="lng">00.0000</span></div>
-        <div style="margin-top:auto; font-size: 0.7rem; color: var(--nord3)">> SYS_READY</div>
+        <div style="margin-top:auto; font-size: 0.7rem; color: var(--nord3)" id="last-seen-footer">> WAITING FOR DATA...</div>
     </div>
 
     <div class="panel control-panel">
@@ -301,7 +304,39 @@
         fetch('/api/status')
             .then(response => response.json())
             .then(data => {
-                document.getElementById('last-seen').innerText = "UPTIME: " + data.last_seen;
+                // Update Last Seen Footer
+                document.getElementById('last-seen-footer').innerText = "> UPDATED: " + data.last_seen;
+                document.getElementById('last-seen').innerText = data.online ? "ONLINE" : "OFFLINE";
+                document.getElementById('last-seen').style.color = data.online ? "var(--nord14)" : "var(--nord11)";
+
+                // Header change if offline
+                const telemetryHeader = document.getElementById('telemetry-header');
+                if (data.online) {
+                    telemetryHeader.innerText = "Telemetry (LIVE)";
+                    telemetryHeader.style.color = "var(--nord8)";
+                } else {
+                    telemetryHeader.innerText = "Telemetry (LAST KNOWN)";
+                    telemetryHeader.style.color = "var(--nord11)";
+                }
+
+                // System Status
+                const sysStatus = document.getElementById('sys-status');
+                sysStatus.innerText = data.online ? "ONLINE" : "OFFLINE";
+                sysStatus.style.color = data.online ? "var(--nord14)" : "var(--nord11)";
+
+                // Seconds Ago
+                document.getElementById('seconds-ago').innerText = data.seconds_ago + "s AGO";
+
+                // GPS Status
+                const gpsStatus = document.getElementById('gps-status');
+                if (data.gps_fix) {
+                    gpsStatus.innerText = "3D FIX (LOCKED)";
+                    gpsStatus.style.color = "var(--nord14)";
+                } else {
+                    gpsStatus.innerText = "NO FIX (SEARCHING)";
+                    gpsStatus.style.color = "var(--nord11)";
+                }
+
                 document.getElementById('speed').innerText = data.speed.toFixed(1);
                 document.getElementById('lat').innerText = data.lat.toFixed(6);
                 document.getElementById('lng').innerText = data.lng.toFixed(6);

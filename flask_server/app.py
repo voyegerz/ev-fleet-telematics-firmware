@@ -26,6 +26,7 @@ class DeviceStatus(db.Model):
     # Hardware State (Reported by ESP32)
     relay_state = db.Column(db.Boolean, default=False)
     led_state = db.Column(db.Boolean, default=False)
+    gps_fix = db.Column(db.Boolean, default=False)
     
     # Last Update
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -34,12 +35,19 @@ class DeviceStatus(db.Model):
     target_relay_state = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
+        # Calculate online status (threshold: 20 seconds)
+        diff = (datetime.utcnow() - self.last_seen).total_seconds()
+        is_online = diff < 20
+        
         return {
             "lat": self.lat,
             "lng": self.lng,
             "speed": self.speed,
             "relay_state": self.relay_state,
             "led_state": self.led_state,
+            "gps_fix": self.gps_fix,
+            "online": is_online,
+            "seconds_ago": int(diff),
             "last_seen": self.last_seen.strftime("%Y-%m-%d %H:%M:%S"),
             "target_relay_state": self.target_relay_state
         }
@@ -76,6 +84,7 @@ def update_telemetry():
     # Status is 1 (HIGH) or 0 (LOW)
     device.relay_state = bool(data.get('relay_status', 0))
     device.led_state = bool(data.get('led_status', 0))
+    device.gps_fix = bool(data.get('gps_fix', 0))
     device.last_seen = datetime.utcnow()
     
     db.session.commit()
