@@ -37,7 +37,7 @@ class DeviceStatus(db.Model):
     def to_dict(self):
         # Calculate online status (threshold: 20 seconds)
         diff = (datetime.utcnow() - self.last_seen).total_seconds()
-        is_online = diff < 20
+        is_online = diff < 35
         
         return {
             "lat": self.lat,
